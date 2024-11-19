@@ -1,0 +1,30 @@
+.stock-metrics {
+    padding: 1rem;
+    border-radius: 0.5rem;
+    background-color: #f8f9fa;
+    margin: 1rem 0;
+}
+
+.metric-label {
+    font-size: 0.9rem;
+    color: #6c757d;
+    font-weight: 500;
+}
+
+.metric-value {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #212529;
+}
+
+.stock-chart {
+    margin: 2rem 0;
+    padding: 1rem;
+    border: 1px solid #dee2e6;
+    border-radius: 0.5rem;
+}
+
+.sidebar-text {
+    font-size: 0.9rem;
+    color: #6c757d;
+}
