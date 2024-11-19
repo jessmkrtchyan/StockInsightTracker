@@ -9,10 +9,6 @@ def create_price_chart(hist_data: pd.DataFrame, symbol: str):
     Create an interactive price chart using Plotly
     """
     try:
-        # Debug logging
-        st.write("Debug: Historical data shape:", hist_data.shape)
-        st.write("Debug: Columns present:", hist_data.columns.tolist())
-        
         # Data validation
         required_columns = ['Open', 'High', 'Low', 'Close', 'Volume']
         if not all(col in hist_data.columns for col in required_columns):
@@ -22,13 +18,11 @@ def create_price_chart(hist_data: pd.DataFrame, symbol: str):
         # Verify data types and handle any non-numeric values
         for col in required_columns:
             if not np.issubdtype(hist_data[col].dtype, np.number):
-                st.write(f"Debug: Converting {col} to numeric, current dtype:", hist_data[col].dtype)
                 hist_data[col] = pd.to_numeric(hist_data[col], errors='coerce')
             
         # Check for null values
         null_counts = hist_data[required_columns].isnull().sum()
         if null_counts.any():
-            st.write("Debug: Null values found:", null_counts[null_counts > 0])
             hist_data = hist_data.dropna(subset=required_columns)
             
         if len(hist_data) == 0:
