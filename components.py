@@ -15,61 +15,71 @@ def create_price_chart(hist_data: pd.DataFrame, symbol: str):
             missing_cols = [col for col in required_columns if col not in hist_data.columns]
             raise ValueError(f"Missing required columns: {missing_cols}")
             
-        # Verify data types and handle any non-numeric values
-        for col in required_columns:
-            if not np.issubdtype(hist_data[col].dtype, np.number):
-                hist_data[col] = pd.to_numeric(hist_data[col], errors='coerce')
+        # Add technical indicators
+        from utils import add_technical_indicators
+        df = add_technical_indicators(hist_data)
             
-        # Check for null values
-        null_counts = hist_data[required_columns].isnull().sum()
-        if null_counts.any():
-            hist_data = hist_data.dropna(subset=required_columns)
-            
-        if len(hist_data) == 0:
-            raise ValueError("No valid data points after cleaning")
-
-        # Create subplots with corrected parameter name
+        # Create subplots with space for indicators
         fig = make_subplots(
-            rows=2, cols=1,
+            rows=4, cols=1,
             shared_xaxes=True,
             vertical_spacing=0.03,
-            row_heights=[0.7, 0.3]
+            row_heights=[0.5, 0.2, 0.15, 0.15]
         )
 
-        try:
-            # Candlestick chart
-            candlestick = go.Candlestick(
-                x=hist_data.index,
-                open=hist_data['Open'],
-                high=hist_data['High'],
-                low=hist_data['Low'],
-                close=hist_data['Close'],
-                name='OHLC'
+        # Candlestick chart
+        candlestick = go.Candlestick(
+            x=df.index,
+            open=df['Open'],
+            high=df['High'],
+            low=df['Low'],
+            close=df['Close'],
+            name='OHLC'
+        )
+        fig.add_trace(candlestick, row=1, col=1)
+
+        # Add Moving Averages
+        fig.add_trace(go.Scatter(x=df.index, y=df['SMA_20'], name='SMA 20', line=dict(color='blue')), row=1, col=1)
+        fig.add_trace(go.Scatter(x=df.index, y=df['SMA_50'], name='SMA 50', line=dict(color='orange')), row=1, col=1)
+        fig.add_trace(go.Scatter(x=df.index, y=df['EMA_20'], name='EMA 20', line=dict(color='purple')), row=1, col=1)
+
+        # Volume
+        volume_bar = go.Bar(x=df.index, y=df['Volume'], name='Volume')
+        fig.add_trace(volume_bar, row=2, col=1)
+
+        # RSI
+        fig.add_trace(go.Scatter(x=df.index, y=df['RSI'], name='RSI', line=dict(color='red')), row=3, col=1)
+        # Add reference lines for RSI overbought/oversold levels
+        fig.add_shape(type="line", x0=df.index[0], x1=df.index[-1], y0=70, y1=70,
+                     line=dict(color="red", width=1, dash="dash"), row="3", col="1")
+        fig.add_shape(type="line", x0=df.index[0], x1=df.index[-1], y0=30, y1=30,
+                     line=dict(color="green", width=1, dash="dash"), row="3", col="1")
+
+        # MACD
+        fig.add_trace(go.Scatter(x=df.index, y=df['MACD'], name='MACD', line=dict(color='blue')), row=4, col=1)
+        fig.add_trace(go.Scatter(x=df.index, y=df['MACD_Signal'], name='Signal', line=dict(color='orange')), row=4, col=1)
+        fig.add_trace(go.Bar(x=df.index, y=df['MACD_Hist'], name='MACD Histogram'), row=4, col=1)
+
+        # Update layout
+        fig.update_layout(
+            title=f'{symbol} Stock Price and Technical Indicators',
+            yaxis_title='Price',
+            yaxis2_title='Volume',
+            yaxis3_title='RSI',
+            yaxis4_title='MACD',
+            xaxis_rangeslider_visible=False,
+            height=1000,
+            showlegend=True,
+            legend=dict(
+                orientation="h",
+                yanchor="bottom",
+                y=1.02,
+                xanchor="right",
+                x=1
             )
-            fig.add_trace(candlestick, row=1, col=1)
+        )
 
-            # Volume bar chart
-            volume_bar = go.Bar(
-                x=hist_data.index,
-                y=hist_data['Volume'],
-                name='Volume'
-            )
-            fig.add_trace(volume_bar, row=2, col=1)
-
-            # Update layout
-            fig.update_layout(
-                title=f'{symbol} Stock Price',
-                yaxis_title='Price',
-                yaxis2_title='Volume',
-                xaxis_rangeslider_visible=False,
-                height=800
-            )
-
-            return fig
-
-        except Exception as e:
-            st.error(f"Error creating Plotly figure: {str(e)}")
-            raise
+        return fig
 
     except Exception as e:
         st.error(f"Error in create_price_chart: {str(e)}")
@@ -93,7 +103,7 @@ def create_summary_table(hist_data: pd.DataFrame):
     """
     Create a summary statistics table
     """
-    summary = pd.DataFrame({
+    summary_data = {
         'Current': hist_data['Close'].iloc[-1],
         'Open': hist_data['Open'].iloc[-1],
         'High': hist_data['High'].iloc[-1],
@@ -101,6 +111,7 @@ def create_summary_table(hist_data: pd.DataFrame):
         'Volume': hist_data['Volume'].iloc[-1],
         'Change %': ((hist_data['Close'].iloc[-1] - hist_data['Open'].iloc[-1]) / 
                     hist_data['Open'].iloc[-1] * 100)
-    }, index=[hist_data.index[-1].strftime('%Y-%m-%d')])
+    }
     
-    return summary.T
+    summary = pd.DataFrame.from_dict(summary_data, orient='index', columns=['Value'])
+    return summary

@@ -2,6 +2,7 @@ import yfinance as yf
 import pandas as pd
 from datetime import datetime, timedelta
 import streamlit as st
+import ta
 
 @st.cache_data(ttl=300)  # Cache data for 5 minutes
 def get_stock_data(symbol: str, period: str = "1y"):
@@ -55,4 +56,26 @@ def prepare_download_data(hist_data: pd.DataFrame) -> pd.DataFrame:
     df = hist_data.copy()
     df.index = df.index.strftime('%Y-%m-%d')
     df = df.round(2)
+    return df
+
+def add_technical_indicators(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Add technical indicators to the dataframe
+    """
+    df = df.copy()
+    
+    # Moving Averages
+    df['SMA_20'] = ta.trend.sma_indicator(df['Close'], window=20)
+    df['SMA_50'] = ta.trend.sma_indicator(df['Close'], window=50)
+    df['EMA_20'] = ta.trend.ema_indicator(df['Close'], window=20)
+    
+    # RSI
+    df['RSI'] = ta.momentum.rsi(df['Close'], window=14)
+    
+    # MACD
+    macd = ta.trend.MACD(df['Close'])
+    df['MACD'] = macd.macd()
+    df['MACD_Signal'] = macd.macd_signal()
+    df['MACD_Hist'] = macd.macd_diff()
+    
     return df
