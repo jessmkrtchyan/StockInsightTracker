@@ -27,11 +27,11 @@ task = "packager.installForAll"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "streamlit run main.py --server.address=0.0.0.0 --server.port=5000 --server.headless=true"
+args = "streamlit run main.py --server.address=0.0.0.0 --server.port=5000 --server.headless=true --browser.gatherUsageStats=false --logger.level=info"
 waitForPort = 5000
 
 [deployment]
-run = ["sh", "-c", "streamlit run main.py --server.address=0.0.0.0 --server.port=5000 --server.headless=true"]
+run = ["sh", "-c", "streamlit run main.py --server.address=0.0.0.0 --server.port=5000 --server.headless=true --browser.gatherUsageStats=false --logger.level=info"]
 
 [[ports]]
 localPort = 80

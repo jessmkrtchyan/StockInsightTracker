@@ -18,6 +18,15 @@ def create_price_chart(hist_data: pd.DataFrame, symbol: str):
         # Add technical indicators
         from utils import add_technical_indicators
         df = add_technical_indicators(hist_data)
+        
+        # Convert technical indicators to numeric type
+        df['RSI'] = pd.to_numeric(df['RSI'], errors='coerce')
+        df['MACD'] = pd.to_numeric(df['MACD'], errors='coerce')
+        df['MACD_Signal'] = pd.to_numeric(df['MACD_Signal'], errors='coerce')
+        df['MACD_Hist'] = pd.to_numeric(df['MACD_Hist'], errors='coerce')
+        df['SMA_20'] = pd.to_numeric(df['SMA_20'], errors='coerce')
+        df['SMA_50'] = pd.to_numeric(df['SMA_50'], errors='coerce')
+        df['EMA_20'] = pd.to_numeric(df['EMA_20'], errors='coerce')
             
         # Create subplots with space for indicators
         fig = make_subplots(
@@ -51,9 +60,9 @@ def create_price_chart(hist_data: pd.DataFrame, symbol: str):
         fig.add_trace(go.Scatter(x=df.index, y=df['RSI'], name='RSI', line=dict(color='red')), row=3, col=1)
         # Add reference lines for RSI overbought/oversold levels
         fig.add_shape(type="line", x0=df.index[0], x1=df.index[-1], y0=70, y1=70,
-                     line=dict(color="red", width=1, dash="dash"), row="3", col="1")
+                     line=dict(color="red", width=1, dash="dash"), row=3, col=1)
         fig.add_shape(type="line", x0=df.index[0], x1=df.index[-1], y0=30, y1=30,
-                     line=dict(color="green", width=1, dash="dash"), row="3", col="1")
+                     line=dict(color="green", width=1, dash="dash"), row=3, col=1)
 
         # MACD
         fig.add_trace(go.Scatter(x=df.index, y=df['MACD'], name='MACD', line=dict(color='blue')), row=4, col=1)
@@ -113,5 +122,6 @@ def create_summary_table(hist_data: pd.DataFrame):
                     hist_data['Open'].iloc[-1] * 100)
     }
     
-    summary = pd.DataFrame.from_dict(summary_data, orient='index', columns=['Value'])
+    summary = pd.DataFrame(summary_data, index=[0]).T
+    summary.columns = ['Value']
     return summary
