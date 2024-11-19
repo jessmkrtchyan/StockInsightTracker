@@ -34,10 +34,10 @@ def create_price_chart(hist_data: pd.DataFrame, symbol: str):
         if len(hist_data) == 0:
             raise ValueError("No valid data points after cleaning")
 
-        # Create subplots
+        # Create subplots with corrected parameter name
         fig = make_subplots(
             rows=2, cols=1,
-            shared_xaxis=True,
+            shared_xaxes=True,
             vertical_spacing=0.03,
             row_heights=[0.7, 0.3]
         )
